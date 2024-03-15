@@ -13,7 +13,11 @@
 # limitations under the License.
 
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 import streamlit as st
+import plotly.express as px
+from babel.numbers import format_currency
 from streamlit.logger import get_logger
 
 LOGGER = get_logger(__name__)
@@ -92,6 +96,33 @@ def run():
 
     main_df = data_df[(data_df["order_purchase_timestamp"] >= str(start_date)) & 
                     (data_df["order_purchase_timestamp"] <= str(end_date))]
+    
+    order_perform_product_df = create_order_perform_product_df(main_df)
+    order_perform_revenue_df = create_order_perform_revenue_df(main_df)
+    monthly_orders_df = created_monthly_orders_df(main_df)
+    rmf_analysis_df = create_rmf_analysis_df(main_df)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        total_orders = monthly_orders_df.order_count.sum()
+        st.metric("Total orders", value=total_orders)
+
+    with col2:
+        total_revenue = format_currency(monthly_orders_df.revenue.sum(), "$", locale='en_US')
+        st.metric("Total Revenue", value=total_revenue)
+
+    fig, ax = plt.subplots(figsize=(16, 8))
+    ax.plot(
+        monthly_orders_df["order_purchase_timestamp"],
+        monthly_orders_df["order_count"],
+        marker='o', 
+        linewidth=2,
+        color="#90CAF9"
+    )
+    ax.tick_params(axis='y', labelsize=20)
+    ax.tick_params(axis='x', labelsize=15)
+    st.pyplot(fig)
 
 if __name__ == "__main__":
     run()
