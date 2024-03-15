@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
 import streamlit as st
 from streamlit.logger import get_logger
 
@@ -24,7 +25,9 @@ def run():
         page_icon="👋",
     )
 
-    st.write("# Welcome to Streamlit! 👋")
+    #st.write("# Welcome to Streamlit! 👋")
+    st.header('E-Commerce Public Dashboard :sparkles:')
+    st.subheader('Daily Orders')
 
     st.sidebar.success("Select a demo above.")
 
@@ -46,6 +49,8 @@ def run():
     """
     )
 
+    
+data_df = pd.read_csv("main_data.csv")
 
 if __name__ == "__main__":
     run()
