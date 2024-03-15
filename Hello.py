@@ -29,28 +29,69 @@ def run():
     st.header('E-Commerce Public Dashboard :sparkles:')
     st.subheader('Daily Orders')
 
-    st.sidebar.success("Select a demo above.")
-
-    st.markdown(
-        """
-        Streamlit is an open-source app framework built specifically for
-        Machine Learning and Data Science projects.
-        **👈 Select a demo from the sidebar** to see some examples
-        of what Streamlit can do!
-        ### Want to learn more?
-        - Check out [streamlit.io](https://streamlit.io)
-        - Jump into our [documentation](https://docs.streamlit.io)
-        - Ask a question in our [community
-          forums](https://discuss.streamlit.io)
-        ### See more complex demos
-        - Use a neural net to [analyze the Udacity Self-driving Car Image
-          Dataset](https://github.com/streamlit/demo-self-driving)
-        - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-    """
-    )
-
     
-data_df = pd.read_csv("main_data.csv")
+    data_df = pd.read_csv("main_data.csv")
+
+    def created_monthly_orders_df(df):
+        monthly_orders_df = df.resample(rule='D', on='order_purchase_timestamp').agg({
+        "order_id": "nunique",
+        "price": "sum"
+        })
+
+        monthly_orders_df = monthly_orders_df.reset_index()
+        monthly_orders_df.rename(columns={
+        "order_id": "order_count",
+        "price": "revenue"
+        }, inplace=True)
+
+        return monthly_orders_df
+
+    def create_order_perform_product_df(df):
+        order_product_df = df.groupby("product_category_name").order_id.nunique().sort_values(ascending=True).reset_index()
+        return order_product_df
+
+    def create_order_perform_revenue_df(df):
+        order_revenue_df = df.groupby("product_category_name").price.sum().sort_values(ascending=True).reset_index()
+        return order_revenue_df
+
+    def create_rmf_analysis_df(df):
+        rmf_analysis = df.groupby(by="customer_id", as_index=False).agg({
+            "order_purchase_timestamp": "max",
+            "order_id": "nunique",
+            "price": "sum"
+        })
+        rmf_analysis.columns = ["customer_id", "max_order_timestamp", "frequency", "monetary"]
+        
+        rmf_analysis["max_order_timestamp"] = rmf_analysis["max_order_timestamp"].dt.date
+        recent_date = df["order_purchase_timestamp"].dt.date.max()
+        rmf_analysis["recency"] = rmf_analysis["max_order_timestamp"].apply(lambda x: (recent_date - x).days)
+        rmf_analysis.drop("max_order_timestamp", axis=1, inplace=True)
+        
+        return rmf_analysis
+
+    datetime_columns = ["order_purchase_timestamp"]
+    data_df.sort_values(by="order_purchase_timestamp", inplace=True)
+    data_df.reset_index(inplace=True)
+
+    for column in datetime_columns:
+        data_df[column] = pd.to_datetime(data_df[column])
+
+    min_date = data_df["order_purchase_timestamp"].min()
+    max_date = data_df["order_purchase_timestamp"].max()
+
+    with st.sidebar:
+        try:
+            start_date, end_date = st.date_input(
+                label='Time Span',min_value=min_date,
+                max_value=max_date,
+                value=[min_date, max_date]
+        )
+        except:
+            start_date = min_date
+            end_date = max_date
+
+    main_df = data_df[(data_df["order_purchase_timestamp"] >= str(start_date)) & 
+                    (data_df["order_purchase_timestamp"] <= str(end_date))]
 
 if __name__ == "__main__":
     run()
