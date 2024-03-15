@@ -124,5 +124,59 @@ def run():
     ax.tick_params(axis='x', labelsize=15)
     st.pyplot(fig)
 
+    st.subheader("Best & Worst Performing Product")
+    col1, col2 = st.columns(2)
+    with col1:
+        total_orders = order_perform_product_df.order_id.max()
+        st.metric("The largest number of product sales", value=total_orders)
+    fig=px.bar(order_perform_product_df,x='order_id',y='product_category_name', orientation='h')
+    st.write(fig)
+
+    st.subheader("Best & Worst Performing Revenue")
+    col1, col2 = st.columns(2)
+    with col1:
+        total_orders = format_currency(order_perform_revenue_df.price.max(), "$", locale='en_US')
+        st.metric("The largest amount of product revenue", value=total_orders)
+    fig=px.bar(order_perform_revenue_df,x='price',y='product_category_name', orientation='h')
+    st.write(fig)
+
+
+    st.subheader("Best Customer Based on RFM Parameters")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        avg_recency = round(rmf_analysis_df.recency.mean(), 1)
+        st.metric("Average Recency (days)", value=avg_recency)
+    with col2:
+        avg_frequency = round(rmf_analysis_df.frequency.mean(), 2)
+        st.metric("Average Frequency", value=avg_frequency)
+    with col3:
+        avg_monetary = format_currency(rmf_analysis_df.monetary.mean(), "$", locale='en_US') 
+        st.metric("Average Monetary", value=avg_monetary)
+    fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(35, 15))
+    colors = ["#90CAF9", "#90CAF9", "#90CAF9", "#90CAF9", "#90CAF9"]
+
+    sns.barplot(y="recency", x="customer_id", data=rmf_analysis_df.sort_values(by="recency", ascending=False).head(5), palette=colors, ax=ax[0])
+    ax[0].set_ylabel(None)
+    ax[0].set_xlabel("customer_id", fontsize=30)
+    ax[0].set_title("By Recency (days)", loc="center", fontsize=50)
+    ax[0].tick_params(axis='y', labelsize=30)
+    #ax[0].tick_params(axis='x', labelsize=35)
+
+    sns.barplot(y="frequency", x="customer_id", data=rmf_analysis_df.sort_values(by="frequency", ascending=False).head(5), palette=colors, ax=ax[1])
+    ax[1].set_ylabel(None)
+    ax[1].set_xlabel("customer_id", fontsize=30)
+    ax[1].set_title("By Frequency", loc="center", fontsize=50)
+    ax[1].tick_params(axis='y', labelsize=30)
+    #ax[1].tick_params(axis='x', labelsize=35)
+
+    sns.barplot(y="monetary", x="customer_id", data=rmf_analysis_df.sort_values(by="monetary", ascending=False).head(5), palette=colors, ax=ax[2])
+    ax[2].set_ylabel(None)
+    ax[2].set_xlabel("customer_id", fontsize=30)
+    ax[2].set_title("By Monetary", loc="center", fontsize=50)
+    ax[2].tick_params(axis='y', labelsize=30)
+    #ax[2].tick_params(axis='x', labelsize=35)
+
+    st.pyplot(fig)
+
 if __name__ == "__main__":
     run()
